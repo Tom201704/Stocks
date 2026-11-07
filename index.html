@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QQQ gegen den 200-Tage-Schnitt</title>
+<meta name="color-scheme" content="light dark">
+<style>
+  :root{
+    --bg:#ffffff; --card:#f7f7f8; --line:#e3e3e6;
+    --ink:#16161a; --ink2:#55555f; --ink3:#86868f;
+    --ok:#1a7f45; --ok-bg:#e9f5ee;
+    --warn:#b3471a; --warn-bg:#fdeee7;
+    --serie:#2563a8; --sma:#8a8a94;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121214; --card:#1c1c20; --line:#2e2e34;
+      --ink:#f1f1f3; --ink2:#b2b2bb; --ink3:#83838d;
+      --ok:#4ec47f; --ok-bg:#15291d;
+      --warn:#f08a5d; --warn-bg:#2b1a12;
+      --serie:#6fa8e0; --sma:#9a9aa4;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121214; --card:#1c1c20; --line:#2e2e34;
+    --ink:#f1f1f3; --ink2:#b2b2bb; --ink3:#83838d;
+    --ok:#4ec47f; --ok-bg:#15291d;
+    --warn:#f08a5d; --warn-bg:#2b1a12;
+    --serie:#6fa8e0; --sma:#9a9aa4;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:24px 16px 48px}
+  h1{font-size:15px; font-weight:600; color:var(--ink2); margin:0 0 16px; letter-spacing:.01em}
+  .zustand{border-radius:14px; padding:20px 18px; margin-bottom:14px; border:1px solid var(--line)}
+  .zustand.ok    {background:var(--ok-bg);   border-color:color-mix(in oklab,var(--ok) 35%,transparent)}
+  .zustand.unter {background:var(--warn-bg); border-color:color-mix(in oklab,var(--warn) 35%,transparent)}
+  .zustand.unklar{background:var(--card)}
+  .gross{font-size:34px; font-weight:700; line-height:1.1; letter-spacing:-.02em}
+  .ok .gross{color:var(--ok)} .unter .gross{color:var(--warn)}
+  .pct{font-size:19px; font-weight:600; margin-top:4px}
+  .ok .pct{color:var(--ok)} .unter .pct{color:var(--warn)}
+  .zeile{display:flex; justify-content:space-between; gap:12px; padding:7px 0;
+         border-top:1px solid var(--line); font-size:14px}
+  .zeile:first-of-type{border-top:0}
+  .zeile span:first-child{color:var(--ink2)}
+  .zeile span:last-child{font-variant-numeric:tabular-nums; font-weight:600}
+  .karte{background:var(--card); border:1px solid var(--line); border-radius:14px;
+         padding:14px 16px; margin-bottom:14px}
+  .karte h2{font-size:13px; font-weight:600; color:var(--ink2); margin:0 0 8px;
+            text-transform:uppercase; letter-spacing:.05em}
+  ol{margin:0; padding-left:20px} li{margin:5px 0; color:var(--ink2)}
+  li b{color:var(--ink)}
+  .fuss{font-size:12.5px; color:var(--ink3); margin-top:16px}
+  .fuss code{font-size:12px}
+  .alarm{background:var(--warn-bg); border:1px solid var(--warn); border-radius:12px;
+         padding:12px 14px; margin-bottom:14px; font-size:13.5px; color:var(--ink)}
+  .alarm b{color:var(--warn)}
+  svg{display:block; width:100%; height:auto}
+  .legende{display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--ink2); margin-top:6px}
+  .legende i{display:inline-block; width:14px; height:2px; vertical-align:middle; margin-right:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>QQQ gegen den 200-Tage-Schnitt</h1>
+  <div id="inhalt"><div class="karte">Lade &hellip;</div></div>
+</div>
+<script>
+const E = document.getElementById('inhalt');
+const n2 = v => (v==null ? '—'
+  : v.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}));
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ⚠ Wie alt ist die Zahl? Ein Schnitt-Vergleich, der stillschweigend eine
+   Woche alt ist, sieht genauso selbstbewusst aus wie ein frischer. Gezaehlt
+   werden Werktage; Feiertage kennt die Seite nicht, deshalb eine grosszuegige
+   Schwelle statt einer scharfen. */
+function werktageSeit(iso){
+  const a = new Date(iso + 'T00:00:00Z'), b = new Date();
+  let t = 0;
+  for (let d = new Date(a); d < b; d.setUTCDate(d.getUTCDate()+1)){
+    const w = d.getUTCDay();
+    if (w !== 0 && w !== 6) t++;
+  }
+  return t - 1;
+}
+
+function chart(v){
+  if (!v || v.length < 5) return '';
+  const W = 600, H = 170, P = 8, RECHTS = 56;
+  const alle = v.flatMap(p => [p.c, p.s]);
+  const lo = Math.min(...alle), hi = Math.max(...alle), sp = (hi - lo) || 1;
+  const x = i => P + i * (W - P - RECHTS) / (v.length - 1);
+  const y = w => P + (hi - w) / sp * (H - 2*P);
+  const pfad = k => v.map((p,i) => (i?'L':'M') + x(i).toFixed(1) + ' ' + y(p[k]).toFixed(1)).join(' ');
+  const yc = y(v[v.length-1].c), ys = y(v[v.length-1].s);
+  /* Beschriftung direkt an der Linie: die Identitaet haengt damit nicht an
+     der Farbe allein. */
+  const label = (yy, t, farbe) =>
+    '<text x="' + (W-RECHTS+6) + '" y="' + Math.min(H-4, Math.max(11, yy+4)) +
+    '" fill="' + farbe + '" font-size="11" font-weight="600">' + t + '</text>';
+  return '<div class="karte"><h2>Letzte ' + v.length + ' Handelstage</h2>' +
+    '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
+      'aria-label="QQQ-Schlusskurs gegen 200-Tage-Schnitt">' +
+      '<path d="' + pfad('s') + '" fill="none" stroke="var(--sma)" stroke-width="2" stroke-dasharray="5 4"/>' +
+      '<path d="' + pfad('c') + '" fill="none" stroke="var(--serie)" stroke-width="2" stroke-linejoin="round"/>' +
+      label(ys,'SMA200','var(--sma)') + label(yc,'QQQ','var(--serie)') +
+    '</svg>' +
+    '<div class="legende">' +
+      '<span><i style="background:var(--serie)"></i>QQQ Schlusskurs</span>' +
+      '<span><i style="background:var(--sma)"></i>200-Tage-Schnitt</span>' +
+    '</div>' +
+    '<div class="fuss" style="margin-top:6px">' + esc(v[0].d) + ' bis ' +
+      esc(v[v.length-1].d) + '</div></div>';
+}
+
+function zeichne(d){
+  const alt = werktageSeit(d.stand);
+  /* ⚠ EINE ALTE ZAHL DARF NICHT WIE EINE FRISCHE AUSSEHEN. Ab vier Werktagen
+     ohne neue Bar ist etwas kaputt (Workflow, Yahoo, Schreibrecht im Repo) —
+     dann steht die Warnung STATT des gruenen oder roten Zustands, nicht
+     daneben. Dieselbe Lehre wie "0.0 % Risiko": eine Anzeige ohne Daten ist
+     kein Befund. */
+  const veraltet = alt >= 4;
+  const kl = veraltet ? 'unklar' : (d.ueber ? 'ok' : 'unter');
+  const vz = d.abstand_pct > 0 ? '+' : '';
+  let h = '';
+  if (veraltet) h += '<div class="alarm"><b>Diese Zahl ist ' + alt +
+    ' Werktage alt.</b> Der letzte Schlusskurs stammt vom ' + esc(d.stand) +
+    ', zuletzt geholt am ' + esc((d.geholt||'').slice(0,10)) +
+    '. Der Abgleich läuft nicht mehr — bis er wieder läuft, sagt diese Seite ' +
+    'nichts über die heutige Lage.</div>';
+  h += '<div class="zustand ' + kl + '">' +
+    '<div class="gross">' +
+      (veraltet ? 'unbekannt' : (d.ueber ? 'ÜBER der Linie' : 'UNTER der Linie')) +
+    '</div>' +
+    '<div class="pct">' + (veraltet ? '' : vz + d.abstand_pct.toFixed(2) + '&thinsp;%') + '</div>' +
+    '<div style="margin-top:14px">' +
+      '<div class="zeile"><span>' + esc(d.symbol) + ' Schlusskurs</span><span>$' + n2(d.kurs) + '</span></div>' +
+      '<div class="zeile"><span>' + d.sma_n + '-Tage-Schnitt</span><span>$' + n2(d.sma) + '</span></div>' +
+      '<div class="zeile"><span>Stand (Handelstag)</span><span>' + esc(d.stand) + '</span></div>' +
+    '</div></div>';
+  h += chart(d.verlauf);
+  h += '<div class="karte"><h2>' + (d.ueber ? 'Über der Linie gilt' : 'Unter der Linie gilt') +
+    '</h2><ol>' + (d.ueber
+      ? '<li><b>Normale Kauflogik.</b> Das Kaufbudget ist frei.</li>' +
+        '<li><b>Stops stehen fix ab Kauf</b> (3×ATR vom Kauftag).</li>'
+      : '<li><b>Nicht kaufen.</b> Das Kaufbudget steht auf $0.</li>' +
+        '<li><b>Nicht verkaufen, nichts zusätzlich absichern.</b> Jede Position behält ihren Stop vom Kauftag.</li>' +
+        '<li><b>Beim Zurückkreuzen die Stops anheben</b> — auf Kurs jenes Tages minus 3×ATR, einzeln bestätigt.</li>'
+    ) + '</ol></div>';
+  h += '<div class="fuss">' + esc(d.quelle) + '. Geholt ' +
+    esc((d.geholt||'').replace('T',' ').replace('Z',' UTC')) + ', ' + d.bars + ' Bars.<br>' +
+    '<b>Tagesschluss, nicht live.</b> Entschieden wird im System aus der letzten ' +
+    'fertigen Tagesbar; ein laufender Handelstag ist kein Schlusskurs. Eine Seite, ' +
+    'die intraday hin- und herspringt, zeigte ein Signal, auf das man nicht handeln kann.<br>' +
+    'Keine Depotdaten auf dieser Seite — nur öffentliche Marktdaten.</div>';
+  E.innerHTML = h;
+}
+
+/* ⚠ Selbst parsen statt r.json(): dann laesst sich "Datei kaputt" von "keine
+   Datei" unterscheiden. Ein einziges NaN hat am 04.11.2026 eine 18-MB-Datei
+   unlesbar gemacht, und beide Dashboards behaupteten dabei etwas Falsches
+   ueber die Ursache. */
+fetch('daten.json?t=' + Date.now())
+  .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+  .then(t => {
+    let d;
+    try { d = JSON.parse(t); }
+    catch(e){ throw new Error('daten.json ist kein gültiges JSON: ' + e.message); }
+    zeichne(d);
+  })
+  .catch(e => {
+    E.innerHTML = '<div class="alarm"><b>Keine Daten.</b> ' + esc(e.message) +
+      ' — der GitHub-Action-Lauf hat <code>daten.json</code> noch nie geschrieben, ' +
+      'oder die Seite ist nicht veröffentlicht. Diese Seite rechnet nichts selbst.</div>';
+  });
+</script>
+</body>
+</html>
