@@ -23,6 +23,25 @@ Deshalb holt **GitHub Actions** die Daten — serverseitig gibt es kein CORS —
 und committet `daten.json` ins Repo. Die Seite liest nur ihre eigene Datei,
 gleiche Herkunft, immer erlaubt.
 
+## ⚠ Nur der SMA200 entscheidet
+
+Seit 07.11.2026 zeigt die Seite auch den **50-** und den **100-Tage-Schnitt** —
+als Kontext, nicht als zweites Signal. Deshalb stehen sie in `daten.json` in
+einem eigenen Feld `neben_smas` und nicht neben `sma` auf gleicher Höhe, und
+deshalb sind sie in der Anzeige **neutral gefärbt**: grün/rot wie oben würde
+eine zweite Ampel bauen, die es nicht gibt.
+
+- **SMA100 als Marktfilter** ist über fünf Regime gemessen deutlich schlechter
+  (8.6/6.3/6.9 % gegen 10.9/10.4/9.7 %) — der kürzere Schnitt reagiert zu
+  schnell.
+- **„Kaufen auch wenn SMA50 über SMA200"** wurde am 07.11.2026 verworfen:
+  Calmar 0.98 → 0.62, Rückgang in **0 von 5** Fenstern besser.
+
+Im Diagramm trägt jede Linie ihre **Beschriftung am rechten Ende** und ein
+eigenes Strichmuster; die Identität hängt also nicht an der Farbe. Der SMA200
+ist der dickste der drei — drei gleich starke Linien wären drei gleichwertige
+Signale.
+
 ## ⚠ Tagesschluss, nicht live — und das ist Absicht
 
 `run_all._markt_lage` und `backtest.markt_ok_roh` entscheiden beide aus der
