@@ -201,6 +201,31 @@ function zeichne(d){
         '</span></div>').join('') +
       '<div class="zeile"><span>Stand (Handelstag)</span><span>' + esc(d.stand) + '</span></div>' +
     '</div></div>';
+  /* ⚠ VORLAEUFIG, UND DESHALB AUSSERHALB DER ZUSTANDSKARTE. Waehrend der
+     US-Sitzung laufen die Zusatz-Abrufe (17 und 20 Uhr); dann gibt es einen
+     aktuellen Kurs, aber keinen Schlusskurs. Entschieden wird weiter aus der
+     fertigen Bar — diese Zeile bekommt deshalb KEINE Ampelfarbe und steht
+     unter der Karte, nicht darin. Verglichen wird gegen den Schnitt, der
+     MORGEN dastuende, wenn heute hier schliesst; den laufenden Kurs gegen
+     den Schnitt von gestern zu halten waere eine dritte Zahl, die es
+     nirgends gibt. */
+  if (d.live && !veraltet) {
+    const lz = d.live.abstand_pct > 0 ? '+' : '';
+    h += '<div class="karte" style="padding:11px 16px">' +
+      '<div style="display:flex;justify-content:space-between;gap:12px;' +
+        'align-items:baseline;flex-wrap:wrap">' +
+        '<span style="font-size:13px;color:var(--ink2)">Jetzt, Börse offen ' +
+          '<b style="color:var(--ink)">$' + n2(d.live.kurs) + '</b></span>' +
+        '<span class="num" style="font-size:13px;color:var(--ink2)">' +
+          'läge bei <b style="color:var(--ink)">' + lz +
+          d.live.abstand_pct.toFixed(2) + '&thinsp;%</b></span>' +
+      '</div>' +
+      '<div class="fuss" style="margin-top:4px">Vorläufig — <b>entscheidet ' +
+        'nicht</b>. Gegen den ' + d.sma_n + '-Tage-Schnitt, der sich ergäbe, ' +
+        'wenn heute hier schliesst ($' + n2(d.live.sma_wenn_schluss) + '). ' +
+        'Stand ' + esc((d.live.zeit||'').replace('T',' ').replace('Z',' UTC')) +
+      '.</div></div>';
+  }
   h += chart(d.verlauf);
   h += '<div class="karte"><h2>' + (d.ueber ? 'Über der Linie gilt' : 'Unter der Linie gilt') +
     '</h2><ol>' + (d.ueber

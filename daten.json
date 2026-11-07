@@ -6,7 +6,7 @@
  "ueber": false,
  "abstand_pct": -3.64,
  "stand": "2026-11-06",
- "geholt": "2026-11-07T17:05:01Z",
+ "geholt": "2026-11-07T19:03:01Z",
  "bars": 501,
  "laufende_bar_verworfen": false,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
@@ -24,6 +24,7 @@
    "abstand_pct": -8.44
   }
  ],
+ "live": null,
  "verlauf": [
   {
    "d": "2026-02-23",
