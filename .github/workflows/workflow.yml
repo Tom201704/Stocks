@@ -1,0 +1,75 @@
+# Gehoert im Ziel-Repo nach .github/workflows/update.yml
+#
+# Holt QQQ bei Yahoo, rechnet den 200-Tage-Schnitt, schreibt daten.json und
+# committet sie zurueck. GitHub Pages liefert danach die neue Zahl aus.
+#
+# ⚠ WARUM SERVERSEITIG UND NICHT IM BROWSER: Yahoo schickt keinen
+# Access-Control-Allow-Origin-Header. Eine Seite auf github.io darf die API
+# also nicht selbst abrufen. Der Umweg waere ein oeffentlicher CORS-Proxy —
+# eine fremde Partei zwischen Datenquelle und Anzeige, die ausfallen kann,
+# ohne dass es auffaellt.
+name: QQQ gegen SMA200
+
+on:
+  schedule:
+    # 22:40 UTC an Werktagen. Die US-Boerse schliesst 21:00 UTC (Sommerzeit
+    # 20:00), die Tagesbar steht danach. Freitag laeuft mit, Samstag/Sonntag
+    # nicht — am Wochenende gibt es keine neue Bar.
+    #
+    # ⚠ GitHub verschiebt geplante Laeufe bei Last um Minuten bis Stunden.
+    # Deshalb Spielraum nach hinten und kein Verlass auf die Uhrzeit: die
+    # Seite zeigt immer das DATUM der benutzten Bar, nicht "heute".
+    - cron: "40 22 * * 1-5"
+    # Zwei Zwischenstaende WAEHREND der US-Sitzung (16:00 und 19:00 UTC =
+    # 17:00 und 20:00 Schweizer Winterzeit). Sie aendern den ZUSTAND nicht —
+    # der kommt weiter aus der letzten fertigen Tagesbar — sondern fuellen
+    # den vorlaeufigen Block `live` auf der Seite.
+    #
+    # ⚠ OHNE DIESEN VORLAEUFIGEN BLOCK WAEREN SIE WIRKUNGSLOS. update.py
+    # verwirft die laufende Bar; die Datei saehe aus wie am Vorabend, der
+    # Schritt "Zurueckschreiben" faende keine Aenderung und committete nichts.
+    # Ein Workflow, der laeuft und nie schreibt, sieht gesund aus und tut
+    # nichts — dieselbe Klasse wie ein Schalter, der nicht feuert.
+    #
+    # ⚠ SOMMERZEIT: GitHub-Cron ist IMMER UTC. Von Ende Maerz bis Ende
+    # Oktober sind das 18:00 und 21:00 Schweizer Zeit, nicht 17:00 und 20:00.
+    # Beide liegen auch dann noch in der Sitzung (US-Schluss 20:00 UTC im
+    # Sommer), die Zeiten verschieben sich also, der Zweck bleibt. Wer sie
+    # ganzjaehrig auf 17/20 Uhr haben will, braucht zwei Cron-Zeilen und
+    # einen Monatsfilter — der Aufwand lohnt hier nicht.
+    - cron: "0 16 * * 1-5"
+    - cron: "0 19 * * 1-5"
+  workflow_dispatch:        # Knopf "Run workflow" fuer einen Lauf von Hand
+
+permissions:
+  contents: write           # nur zum Zurueckschreiben von daten.json
+
+concurrency:
+  group: qqq-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Keine Abhaengigkeiten: update.py benutzt nur die Standardbibliothek.
+      - name: Daten holen
+        run: python update.py
+
+      - name: Zurueckschreiben, wenn sich etwas geaendert hat
+        run: |
+          if git diff --quiet -- daten.json; then
+            echo "keine Aenderung — kein Commit"
+            exit 0
+          fi
+          git config user.name  "qqq-wacht"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add daten.json
+          git commit -m "QQQ-Stand $(python -c "import json;print(json.load(open('daten.json'))['stand'])")"
+          git push
