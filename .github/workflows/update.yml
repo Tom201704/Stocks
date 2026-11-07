@@ -20,6 +20,25 @@ on:
     # Deshalb Spielraum nach hinten und kein Verlass auf die Uhrzeit: die
     # Seite zeigt immer das DATUM der benutzten Bar, nicht "heute".
     - cron: "40 22 * * 1-5"
+    # Zwei Zwischenstaende WAEHREND der US-Sitzung (16:00 und 19:00 UTC =
+    # 17:00 und 20:00 Schweizer Winterzeit). Sie aendern den ZUSTAND nicht —
+    # der kommt weiter aus der letzten fertigen Tagesbar — sondern fuellen
+    # den vorlaeufigen Block `live` auf der Seite.
+    #
+    # ⚠ OHNE DIESEN VORLAEUFIGEN BLOCK WAEREN SIE WIRKUNGSLOS. update.py
+    # verwirft die laufende Bar; die Datei saehe aus wie am Vorabend, der
+    # Schritt "Zurueckschreiben" faende keine Aenderung und committete nichts.
+    # Ein Workflow, der laeuft und nie schreibt, sieht gesund aus und tut
+    # nichts — dieselbe Klasse wie ein Schalter, der nicht feuert.
+    #
+    # ⚠ SOMMERZEIT: GitHub-Cron ist IMMER UTC. Von Ende Maerz bis Ende
+    # Oktober sind das 18:00 und 21:00 Schweizer Zeit, nicht 17:00 und 20:00.
+    # Beide liegen auch dann noch in der Sitzung (US-Schluss 20:00 UTC im
+    # Sommer), die Zeiten verschieben sich also, der Zweck bleibt. Wer sie
+    # ganzjaehrig auf 17/20 Uhr haben will, braucht zwei Cron-Zeilen und
+    # einen Monatsfilter — der Aufwand lohnt hier nicht.
+    - cron: "0 16 * * 1-5"
+    - cron: "0 19 * * 1-5"
   workflow_dispatch:        # Knopf "Run workflow" fuer einen Lauf von Hand
 
 permissions:
