@@ -164,16 +164,51 @@ def main():
     # dritte Zahl, die es nirgends gibt.
     live_px = laufender_kurs or meta.get("regularMarketPrice")
     out["live"] = None
+    out["live_verlauf"] = []
     if unfertig and live_px:
         prov = (sum(c for _, c in bars[-(SMA_N - 1):]) + float(live_px)) / SMA_N
+        zeit = (datetime.fromtimestamp(int(letzte_ts), timezone.utc)
+                .strftime("%Y-%m-%dT%H:%M:%SZ") if letzte_ts else None)
         out["live"] = {
             "kurs": round(float(live_px), 2),
             "sma_wenn_schluss": round(prov, 2),
             "abstand_pct": round((float(live_px) / prov - 1) * 100, 2),
             "ueber": bool(float(live_px) > prov),
-            "zeit": (datetime.fromtimestamp(int(letzte_ts), timezone.utc)
-                     .strftime("%Y-%m-%dT%H:%M:%SZ") if letzte_ts else None),
+            "zeit": zeit,
+            # Der Schlusskurs, gegen den der Zwischenstand laeuft — damit die
+            # Richtung ohne zweite Quelle ablesbar ist.
+            "vortag_kurs": round(kurs, 2),
+            "vortag_stand": stand,
+            "seit_schluss_pct": round((float(live_px) / kurs - 1) * 100, 2),
         }
+        # ── VERLAUF INNERHALB DES HANDELSTAGES ────────────────────────────
+        # Drei Laeufe am Tag ergeben drei Punkte. Wenig, aber zusammen mit dem
+        # Schlusskurs von gestern zeigen sie eine RICHTUNG — und genau danach
+        # wird waehrend des Tages geschaut.
+        #
+        # ⚠ DIE DATEI LIEST HIER IHRE EIGENE VORIGE AUSGABE. Das ist in
+        # diesem Projekt schon einmal schiefgegangen (`_guard_open_orders`
+        # las seine eigene Ausgabe und schuetzte dadurch nichts). Hier ist es
+        # zulaessig, weil es ein ANHAENGENDES Protokoll ist und keine
+        # Pruefung: faellt die alte Datei weg oder ist sie kaputt, faengt der
+        # Verlauf bei null an — es geht nichts verloren ausser Punkten.
+        alt = []
+        try:
+            with open(ZIEL, encoding="utf-8") as f:
+                alt = (json.load(f) or {}).get("live_verlauf") or []
+        except Exception:
+            alt = []
+        heute_tag = (zeit or "")[:10]
+        # ⚠ Der Verlauf gehoert zum LAUFENDEN Tag, nicht zu `stand` (das ist
+        # die letzte fertige Bar, also gestern). Wechselt der Tag, faengt er
+        # neu an — sonst klebten Punkte von gestern an der heutigen Kurve.
+        verlauf = [p for p in alt
+                   if isinstance(p, dict) and str(p.get("ts", ""))[:10] == heute_tag]
+        if zeit and (not verlauf or verlauf[-1].get("ts") != zeit):
+            verlauf.append({"ts": zeit,
+                            "kurs": round(float(live_px), 2),
+                            "abstand_pct": out["live"]["abstand_pct"]})
+        out["live_verlauf"] = verlauf[-12:]
 
     # Verlauf fuer das kleine Diagramm: je Tag Schlusskurs UND der an diesem
     # Tag gueltige Schnitt. ⚠ Der Schnitt muss MITGESCHRIEBEN werden — wer nur

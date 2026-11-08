@@ -36,7 +36,10 @@
     -webkit-text-size-adjust:100%;
   }
   .wrap{max-width:640px; margin:0 auto; padding:24px 16px 48px}
-  h1{font-size:15px; font-weight:600; color:var(--ink2); margin:0 0 16px; letter-spacing:.01em}
+  h1{font-size:15px; font-weight:600; color:var(--ink2); margin:0 0 4px; letter-spacing:.01em}
+  .lauf{font-size:12.5px; color:var(--ink3); margin:0 0 16px}
+  .lauf b{color:var(--ink2); font-weight:600}
+  .lauf.alt{color:var(--warn)} .lauf.alt b{color:var(--warn)}
   .zustand{border-radius:14px; padding:20px 18px; margin-bottom:14px; border:1px solid var(--line)}
   .zustand.ok    {background:var(--ok-bg);   border-color:color-mix(in oklab,var(--ok) 35%,transparent)}
   .zustand.unter {background:var(--warn-bg); border-color:color-mix(in oklab,var(--warn) 35%,transparent)}
@@ -64,11 +67,17 @@
   svg{display:block; width:100%; height:auto}
   .legende{display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--ink2); margin-top:6px}
   .legende i{display:inline-block; width:14px; height:2px; vertical-align:middle; margin-right:5px}
+  .spur{display:flex; gap:10px; flex-wrap:wrap; margin-top:7px; font-size:12px;
+        color:var(--ink2); font-variant-numeric:tabular-nums}
+  .spur span{background:var(--bg); border:1px solid var(--line);
+             border-radius:5px; padding:2px 7px}
+  .spur b{color:var(--ink3); font-weight:600}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>QQQ gegen den 200-Tage-Schnitt</h1>
+  <p class="lauf" id="lauf"></p>
   <div id="inhalt"><div class="karte">Lade &hellip;</div></div>
 </div>
 <script>
@@ -164,7 +173,78 @@ function chart(v){
       esc(v[v.length-1].d) + '</div></div>';
 }
 
+/* ⚠ ZWEI VERSCHIEDENE ZEITPUNKTE, und sie werden leicht verwechselt:
+     `geholt`  = wann der Workflow zuletzt LIEF (und Daten schrieb)
+     `stand`   = von welchem HANDELSTAG die benutzten Kurse sind
+   Am Wochenende laeuft der Cron nicht (Mo–Fr) und die letzte Bar ist die von
+   Freitag — beide Zahlen stehen dann still, aus zwei verschiedenen Gruenden.
+   Eine gemeinsame Beschriftung wuerde das verwischen.
+
+   ⚠ `geholt` TAUGT als Laufzeit, weil update.py es bei JEDEM Lauf auf die
+   aktuelle Uhrzeit setzt: daten.json unterscheidet sich damit nach jedem
+   erfolgreichen Lauf, und der Commit kommt. Scheitert der Lauf, bleibt die
+   alte Zeit stehen — und genau das soll man hier sehen. */
+const uhr = iso => {
+  if (!iso) return '?';
+  const t = new Date(iso);
+  return isNaN(t) ? '?'
+    : t.toLocaleTimeString('de-CH', { hour:'2-digit', minute:'2-digit' });
+};
+function laufzeile(d){
+  const el = document.getElementById('lauf');
+  if (!el) return;
+  if (!d || !d.geholt) { el.textContent = ''; return; }
+  const t = new Date(d.geholt);
+  if (isNaN(t)) { el.textContent = ''; return; }
+  const stunden = (Date.now() - t.getTime()) / 36e5;
+  const alter = stunden < 1 ? 'gerade eben'
+    : stunden < 24 ? `vor ${Math.round(stunden)} Std`
+    : `vor ${Math.round(stunden / 24)} Tagen`;
+  /* ⚠ Schwelle 3 Kalendertage, nicht 1: der Cron laeuft Mo–Fr, am Sonntag
+     ist der letzte Lauf zwangslaeufig zwei Tage her. Eine Warnung, die jedes
+     Wochenende kommt, wird nicht mehr gelesen. */
+  const zuAlt = stunden > 72;
+  el.className = 'lauf' + (zuAlt ? ' alt' : '');
+  const wann = t.toLocaleString('de-CH', { weekday:'short', day:'2-digit',
+    month:'2-digit', hour:'2-digit', minute:'2-digit' });
+  /* Beide Zeitpunkte nebeneinander, jeder mit eigener Beschriftung. Sie
+     getrennt zu halten ist der ganze Zweck: der eine sagt, ob der Abgleich
+     noch laeuft, der andere, wie alt die Kurse sind. */
+  const tag = d.stand ? d.stand.slice(8,10) + '.' + d.stand.slice(5,7) + '.' : '?';
+  let zeile = (zuAlt ? '⚠ ' : '') + 'Zuletzt geprüft <b>' + esc(wann) + '</b> · ' +
+    esc(alter) + (zuAlt ? ' — der Abgleich läuft nicht mehr.' : '');
+  zeile += ' &nbsp;·&nbsp; Schluss <b>' + esc(tag) + '</b> $' + n2(d.kurs);
+  /* ⚠ WAEHREND DER SITZUNG IST DER HEUTIGE TAG NOCH NICHT DABEI. Die letzte
+     Bar ist die von GESTERN, und der heutige Kurs ist ein Zwischenstand, auf
+     den die Regel nicht angewendet wird. Ohne diesen Zusatz sieht die obere
+     Zeile aus, als waeren die Kurse schlicht einen Tag alt — der Unterschied
+     zwischen "einen Tag hinterher" und "heute laeuft noch" ist aber genau
+     der, auf den es ankommt. */
+  if (d.live && d.live.kurs != null) {
+    /* ⚠ MIT UHRZEIT. Waehrend des Handelstages ist "von wann" die halbe
+       Information — ein Zwischenstand ohne Zeitstempel koennte eine Minute
+       oder vier Stunden alt sein, und der Abstand zur Linie liest sich in
+       beiden Faellen gleich. */
+    const s = d.live.seit_schluss_pct;
+    zeile += ' &nbsp;·&nbsp; jetzt <b>' + esc(uhr(d.live.zeit)) + '</b> $' +
+      n2(d.live.kurs) +
+      (s == null ? '' : ' (<b>' + (s > 0 ? '+' : '') + s.toFixed(2) +
+        '&thinsp;%</b> seit Schluss)');
+  }
+  el.innerHTML = zeile;
+  el.title = 'Links: Zeitpunkt des letzten erfolgreichen Workflow-Laufs (' +
+    d.geholt + '). Rechts: der Handelstag, aus dem die benutzten Kurse ' +
+    'stammen (' + (d.stand || '?') + '). Zwei verschiedene Dinge — am ' +
+    'Wochenende stehen beide still, der eine weil der Abgleich Mo–Fr läuft, ' +
+    'der andere weil die letzte Bar die von Freitag ist.' +
+    (d.live ? ' Die Börse ist gerade offen: der heutige Tag ist noch keine ' +
+      'fertige Bar, der Wert daneben ist ein Zwischenstand und entscheidet ' +
+      'nichts.' : '') +
+    ' Werktags läuft der Abgleich um 16:00, 19:00 und 22:40 UTC.';
+}
+
 function zeichne(d){
+  laufzeile(d);
   const alt = werktageSeit(d.stand);
   /* ⚠ EINE ALTE ZAHL DARF NICHT WIE EINE FRISCHE AUSSEHEN. Ab vier Werktagen
      ohne neue Bar ist etwas kaputt (Workflow, Yahoo, Schreibrecht im Repo) —
@@ -220,10 +300,20 @@ function zeichne(d){
           'läge bei <b style="color:var(--ink)">' + lz +
           d.live.abstand_pct.toFixed(2) + '&thinsp;%</b></span>' +
       '</div>' +
+      /* Der Tagesverlauf aus den drei Laeufen, plus der Schlusskurs von
+         gestern als Startpunkt. Drei Punkte sind wenig — aber die Frage
+         waehrend des Tages lautet "in welche Richtung", und dafuer reicht
+         ein Anfang und zwei Zwischenstaende. */
+      ((d.live_verlauf||[]).length ? '<div class="spur">' +
+        '<span><b>' + esc(d.stand ? d.stand.slice(8,10)+'.'+d.stand.slice(5,7)+'.' : '?') +
+          ' Schluss</b> $' + n2(d.kurs) + '</span>' +
+        (d.live_verlauf||[]).map(p => '<span>' + esc(uhr(p.ts)) + ' $' +
+          n2(p.kurs) + '</span>').join('') +
+      '</div>' : '') +
       '<div class="fuss" style="margin-top:4px">Vorläufig — <b>entscheidet ' +
         'nicht</b>. Gegen den ' + d.sma_n + '-Tage-Schnitt, der sich ergäbe, ' +
         'wenn heute hier schliesst ($' + n2(d.live.sma_wenn_schluss) + '). ' +
-        'Stand ' + esc((d.live.zeit||'').replace('T',' ').replace('Z',' UTC')) +
+        'Abgerufen ' + esc((d.live.zeit||'').replace('T',' ').replace('Z',' UTC')) +
       '.</div></div>';
   }
   h += chart(d.verlauf);
