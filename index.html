@@ -148,29 +148,43 @@ function chart(v){
     belegt.push(z); return z;
   };
   const letzte = v[v.length-1];
+  /* ⚠ DER LAUFENDE TAG WIRD ALS SOLCHER GEZEICHNET. Er haengt an derselben
+     Linie — sonst endete die Kurve gestern, waehrend die Karte darueber den
+     heutigen Kurs zeigt —, bekommt aber einen OFFENEN Kreis und eine eigene
+     Fussnote. Ein vorlaeufiger Punkt, der aussieht wie ein Schlusskurs, ist
+     dieselbe Klasse wie „PAUSCHAL 2.5 %": eine Zahl, die mehr behauptet, als
+     sie weiss. */
+  const vorl = (letzte && letzte.vorlaeufig) ? letzte : null;
+  const marke = vorl
+    ? '<circle cx="' + x(v.length-1).toFixed(1) + '" cy="' + y(vorl.c).toFixed(1) +
+      '" r="3.5" fill="var(--card)" stroke="var(--serie)" stroke-width="2"/>'
+    : '';
   const label = (yy, t, farbe) =>
-    '<text x="' + (W-RECHTS+6) + '" y="' + platz(yy) +
+    /* +11 statt +6: der offene Kreis des laufenden Punktes sitzt genau auf
+       dem rechten Ende der Kurve und stiess sonst an die Beschriftung. */
+    '<text x="' + (W-RECHTS+11) + '" y="' + platz(yy) +
     '" fill="' + farbe + '" font-size="10.5" font-weight="600">' + t + '</text>';
   // Kurs zuerst beschriften — er ist die wichtigste Linie und bekommt den
   // Platz, der ihm wirklich gehoert.
   const lblKurs = label(y(letzte.c), 'QQQ', 'var(--serie)');
   const lblAvg = linien.map(l => label(y(letzte[l.k]), l.t, l.farbe)).join('');
-  return '<div class="karte"><h2>Letzte ' + v.length + ' Handelstage</h2>' +
+  return '<div class="karte"><h2>Letzte ' + (vorl ? v.length-1 : v.length) +
+      ' Handelstage' + (vorl ? ' + heute' : '') + '</h2>' +
     '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
       'aria-label="QQQ-Schlusskurs gegen 50-, 100- und 200-Tage-Schnitt">' +
       linien.map(l => '<path d="' + pfad(l.k) + '" fill="none" stroke="' + l.farbe +
         '" stroke-width="' + l.w + '" stroke-dasharray="' + l.dash + '"/>').join('') +
       '<path d="' + pfad('c') + '" fill="none" stroke="var(--serie)" stroke-width="2" stroke-linejoin="round"/>' +
-      lblKurs + lblAvg +
+      marke + lblKurs + lblAvg +
     '</svg>' +
     '<div class="legende">' +
       '<span><i style="background:var(--serie)"></i>QQQ Schlusskurs</span>' +
       linien.map(l => '<span><i style="background:' + l.farbe + '"></i>' +
-        l.t.replace('SMA','') + '-Tage-Schnitt' +
-        (l.k === 's' ? ' <b>(entscheidet)</b>' : '') + '</span>').join('') +
+        l.t.replace('SMA','') + '-Tage-Schnitt</span>').join('') +
     '</div>' +
     '<div class="fuss" style="margin-top:6px">' + esc(v[0].d) + ' bis ' +
-      esc(v[v.length-1].d) + '</div></div>';
+      esc(letzte.d) + (vorl ? ' — der letzte Punkt (○) ist <b>vorläufig</b>: ' +
+        'der laufende Kurs, noch kein Schlusskurs.' : '') + '</div></div>';
 }
 
 /* ⚠ ZWEI VERSCHIEDENE ZEITPUNKTE, und sie werden leicht verwechselt:
@@ -238,8 +252,7 @@ function laufzeile(d){
     'Wochenende stehen beide still, der eine weil der Abgleich Mo–Fr läuft, ' +
     'der andere weil die letzte Bar die von Freitag ist.' +
     (d.live ? ' Die Börse ist gerade offen: der heutige Tag ist noch keine ' +
-      'fertige Bar, der Wert daneben ist ein Zwischenstand und entscheidet ' +
-      'nichts.' : '') +
+      'fertige Bar, die Karte rechnet mit dem laufenden Kurs.' : '') +
     ' Werktags läuft der Abgleich um 16:00, 19:00 und 22:40 UTC.';
 }
 
@@ -252,8 +265,36 @@ function zeichne(d){
      daneben. Dieselbe Lehre wie "0.0 % Risiko": eine Anzeige ohne Daten ist
      kein Befund. */
   const veraltet = alt >= 4;
-  const kl = veraltet ? 'unklar' : (d.ueber ? 'ok' : 'unter');
-  const vz = d.abstand_pct > 0 ? '+' : '';
+
+  /* ⚠ EINE KARTE, EIN BEZUGSPUNKT. Vorher standen Zustand (Schlusskurs) und
+     Zwischenstand (laufender Kurs) in zwei Kacheln untereinander — zwei
+     Zahlenpaare fuer dieselbe Frage, und man musste erst herausfinden, welche
+     gerade gilt. Jetzt zeigt die Karte waehrend der Sitzung durchgehend den
+     LAUFENDEN Kurs, gegen die Schnitte, die sich ergaeben, wenn heute hier
+     schliesst; nach Schluss durchgehend die fertige Bar.
+     ⚠ Welcher Fall gilt, steht an der Kurszeile ("Intraday 17:52" gegen
+     "Schlusskurs") und am Stand. Eine Karte, die beides gleich beschriftet,
+     waere die gefaehrlichere Vereinfachung.
+     ⚠ Nahe an der Linie koennen Seite und `run_all` dabei verschiedene
+     Vorzeichen zeigen — das System entscheidet weiter aus der fertigen Bar.
+     Steht in der Fussnote und im README. */
+  const live = (!veraltet && d.live && d.live.kurs != null) ? d.live : null;
+  const px    = live ? live.kurs              : d.kurs;
+  const sma   = live ? live.sma_wenn_schluss  : d.sma;
+  const pct   = live ? live.abstand_pct       : d.abstand_pct;
+  const ueber = live ? live.ueber             : d.ueber;
+  const neben = (live && live.neben) ? live.neben : (d.neben_smas || []);
+  /* Gewinn/Verlust gegen den vorherigen SCHLUSSKURS. Waehrend der Sitzung ist
+     das der laufende Kurs gegen gestern, nach Schluss die fertige Bar gegen
+     die davor. ⚠ "Vortag" ist die vorletzte fertige BAR — am Montag liegt da
+     das Wochenende dazwischen, deshalb steht das Datum daneben. */
+  const tagPct  = live ? live.seit_schluss_pct : d.tag_pct;
+  const tagRef  = live ? d.kurs                : d.vortag_kurs;
+  const tagTag  = live ? d.stand               : d.vortag_stand;
+
+  const kl = veraltet ? 'unklar' : (ueber ? 'ok' : 'unter');
+  const vz = v => (v > 0 ? '+' : '');
+  const dKurz = t => t ? t.slice(8,10) + '.' + t.slice(5,7) + '.' : '?';
   let h = '';
   if (veraltet) h += '<div class="alarm"><b>Diese Zahl ist ' + alt +
     ' Werktage alt.</b> Der letzte Schlusskurs stammt vom ' + esc(d.stand) +
@@ -262,60 +303,49 @@ function zeichne(d){
     'nichts über die heutige Lage.</div>';
   h += '<div class="zustand ' + kl + '">' +
     '<div class="gross">' +
-      (veraltet ? 'unbekannt' : (d.ueber ? 'ÜBER der Linie' : 'UNTER der Linie')) +
+      (veraltet ? 'unbekannt' : (ueber ? 'ÜBER der Linie' : 'UNTER der Linie')) +
     '</div>' +
-    '<div class="pct">' + (veraltet ? '' : vz + d.abstand_pct.toFixed(2) + '&thinsp;%') + '</div>' +
+    '<div class="pct">' + (veraltet ? '' : vz(pct) + pct.toFixed(2) + '&thinsp;%') +
+      (live ? '<span style="font-size:13px;font-weight:600;color:var(--ink2)">' +
+              '&nbsp;&nbsp;intraday</span>' : '') +
+    '</div>' +
     '<div style="margin-top:14px">' +
-      '<div class="zeile"><span>' + esc(d.symbol) + ' Schlusskurs</span><span>$' + n2(d.kurs) + '</span></div>' +
-      '<div class="zeile"><span>' + d.sma_n + '-Tage-Schnitt <b>(entscheidet)</b></span>' +
-        '<span>$' + n2(d.sma) + '</span></div>' +
+      '<div class="zeile"><span>' + esc(d.symbol) + ' ' +
+        (live ? 'Intraday ' + esc(uhr(live.zeit)) : 'Schlusskurs') +
+        '</span><span>$' + n2(px) + '</span></div>' +
+      /* Gewinn/Verlust gegen den Vortagsschluss — eigene Zeile mit eigener
+         Beschriftung. Die Farbe gehoert HIER zur Zahl selbst und nicht zur
+         Ampel darueber; ohne Label waeren das zwei Aussagen im selben Feld. */
+      (tagPct == null ? '' :
+        '<div class="zeile"><span>ggü. Vortag' +
+          (tagTag ? ' (' + esc(dKurz(tagTag)) + (tagRef ? ' $' + n2(tagRef) : '') + ')' : '') +
+          '</span><span style="color:var(--' + (tagPct >= 0 ? 'ok' : 'warn') + ')">' +
+          vz(tagPct) + tagPct.toFixed(2) + '&thinsp;%</span></div>') +
+      '<div class="zeile"><span>' + d.sma_n + '-Tage-Schnitt</span>' +
+        '<span>$' + n2(sma) + '</span></div>' +
       /* ⚠ NEUTRALE FARBE fuer 50 und 100. Gruen/rot wie oben wuerde sie zu
          einer zweiten Ampel machen — und genau die gibt es nicht: SMA100 als
          Marktfilter ist gemessen deutlich schlechter, und die ODER-Regel mit
          dem SMA50 wurde am 07.11.2026 verworfen. Eine Anzeige, die wie eine
          Vorschrift aussieht, wird als eine gelesen. */
-      (d.neben_smas||[]).filter(x => x.sma != null).map(x =>
+      neben.filter(x => x.sma != null).map(x =>
         '<div class="zeile"><span>' + x.n + '-Tage-Schnitt</span><span>$' + n2(x.sma) +
         '<span style="color:var(--ink3);font-weight:500">&nbsp;&nbsp;' +
-        (x.abstand_pct > 0 ? '+' : '') + x.abstand_pct.toFixed(2) + '&thinsp;%</span>' +
+        vz(x.abstand_pct) + x.abstand_pct.toFixed(2) + '&thinsp;%</span>' +
         '</span></div>').join('') +
-      '<div class="zeile"><span>Stand (Handelstag)</span><span>' + esc(d.stand) + '</span></div>' +
-    '</div></div>';
-  /* ⚠ VORLAEUFIG, UND DESHALB AUSSERHALB DER ZUSTANDSKARTE. Waehrend der
-     US-Sitzung laufen die Zusatz-Abrufe (17 und 20 Uhr); dann gibt es einen
-     aktuellen Kurs, aber keinen Schlusskurs. Entschieden wird weiter aus der
-     fertigen Bar — diese Zeile bekommt deshalb KEINE Ampelfarbe und steht
-     unter der Karte, nicht darin. Verglichen wird gegen den Schnitt, der
-     MORGEN dastuende, wenn heute hier schliesst; den laufenden Kurs gegen
-     den Schnitt von gestern zu halten waere eine dritte Zahl, die es
-     nirgends gibt. */
-  if (d.live && !veraltet) {
-    const lz = d.live.abstand_pct > 0 ? '+' : '';
-    h += '<div class="karte" style="padding:11px 16px">' +
-      '<div style="display:flex;justify-content:space-between;gap:12px;' +
-        'align-items:baseline;flex-wrap:wrap">' +
-        '<span style="font-size:13px;color:var(--ink2)">Jetzt, Börse offen ' +
-          '<b style="color:var(--ink)">$' + n2(d.live.kurs) + '</b></span>' +
-        '<span class="num" style="font-size:13px;color:var(--ink2)">' +
-          'läge bei <b style="color:var(--ink)">' + lz +
-          d.live.abstand_pct.toFixed(2) + '&thinsp;%</b></span>' +
-      '</div>' +
-      /* Der Tagesverlauf aus den drei Laeufen, plus der Schlusskurs von
-         gestern als Startpunkt. Drei Punkte sind wenig — aber die Frage
-         waehrend des Tages lautet "in welche Richtung", und dafuer reicht
-         ein Anfang und zwei Zwischenstaende. */
-      ((d.live_verlauf||[]).length ? '<div class="spur">' +
-        '<span><b>' + esc(d.stand ? d.stand.slice(8,10)+'.'+d.stand.slice(5,7)+'.' : '?') +
-          ' Schluss</b> $' + n2(d.kurs) + '</span>' +
+      '<div class="zeile"><span>Stand</span><span>' +
+        (live ? esc((live.zeit||'').slice(0,10)) + ', Börse offen'
+              : esc(d.stand) + ', Schluss') + '</span></div>' +
+      /* Der Tagesverlauf aus den drei Laeufen, mit dem Schlusskurs von gestern
+         als Startpunkt. Drei Punkte sind wenig — aber die Frage waehrend des
+         Tages lautet "in welche Richtung", und dafuer reicht ein Anfang und
+         zwei Zwischenstaende. */
+      ((live && (d.live_verlauf||[]).length) ? '<div class="spur">' +
+        '<span><b>' + esc(dKurz(d.stand)) + ' Schluss</b> $' + n2(d.kurs) + '</span>' +
         (d.live_verlauf||[]).map(p => '<span>' + esc(uhr(p.ts)) + ' $' +
           n2(p.kurs) + '</span>').join('') +
       '</div>' : '') +
-      '<div class="fuss" style="margin-top:4px">Vorläufig — <b>entscheidet ' +
-        'nicht</b>. Gegen den ' + d.sma_n + '-Tage-Schnitt, der sich ergäbe, ' +
-        'wenn heute hier schliesst ($' + n2(d.live.sma_wenn_schluss) + '). ' +
-        'Abgerufen ' + esc((d.live.zeit||'').replace('T',' ').replace('Z',' UTC')) +
-      '.</div></div>';
-  }
+    '</div></div>';
   h += chart(d.verlauf);
   h += '<div class="karte"><h2>' + (d.ueber ? 'Über der Linie gilt' : 'Unter der Linie gilt') +
     '</h2><ol>' + (d.ueber
@@ -333,9 +363,11 @@ function zeichne(d){
     '10.9/10.4/9.7&thinsp;%), und die Regel „kaufen auch wenn SMA50 über SMA200" ' +
     'wurde am 07.11.2026 verworfen (Calmar 0.98 → 0.62, Rückgang in 0 von 5 ' +
     'Fenstern besser).<br>' +
-    '<b>Tagesschluss, nicht live.</b> Entschieden wird im System aus der letzten ' +
-    'fertigen Tagesbar; ein laufender Handelstag ist kein Schlusskurs. Eine Seite, ' +
-    'die intraday hin- und herspringt, zeigte ein Signal, auf das man nicht handeln kann.<br>' +
+    '<b>Während der Sitzung steht hier der laufende Kurs</b>, gegen die Schnitte, ' +
+    'die sich ergäben, wenn heute auf diesem Stand schliesst. Nach Schluss die ' +
+    'fertige Tagesbar. Das System entscheidet immer aus der letzten fertigen Bar — ' +
+    'nahe an der Linie können diese Seite und <code>run_all</code> deshalb ' +
+    'verschiedene Vorzeichen zeigen; massgeblich ist <code>run_all</code>.<br>' +
     'Keine Depotdaten auf dieser Seite — nur öffentliche Marktdaten.</div>';
   E.innerHTML = h;
 }

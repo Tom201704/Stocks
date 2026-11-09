@@ -12,8 +12,13 @@ ausfallen kann, ohne dass es jemandem auffaellt.
 letzten FERTIGEN Tagesbar — ein laufender Handelstag ist kein Schlusskurs, und
 eine Anzeige, die intraday hin- und herspringt, zeigt ein Signal, auf das man
 nicht handeln kann. Genau der Look-ahead, der am 09.08. und 06.11.2026 je
-zwei Tage Arbeit gekostet hat. Diese Seite ist deshalb bewusst nur einmal am
-Tag aktuell.
+zwei Tage Arbeit gekostet hat.
+
+Deshalb wird die laufende Bar aus `bars` verworfen und `kurs`/`sma`/`ueber`
+stehen immer auf der letzten FERTIGEN Bar. Der laufende Kurs wandert in den
+Block `live` — die Anzeige stellt ihn waehrend der Sitzung nach vorne, gegen
+die Schnitte, die sich ergaeben, wenn heute hier schliesst. Das ist eine
+Entscheidung der ANZEIGE; was die Regel traegt, steht weiterhin oben.
 
 Nur Standardbibliothek — in Actions soll nichts installiert werden muessen.
 """
@@ -117,6 +122,13 @@ def main():
     sma = sum(c for _, c in bars[-SMA_N:]) / SMA_N
     stand = tag(bars[-1][0])
 
+    # ⚠ DER VORTAG IST DIE VORLETZTE FERTIGE BAR, nicht "gestern". An einem
+    # Montag liegt dazwischen das Wochenende, nach einem Feiertag zwei Tage.
+    # Deshalb wird das Datum mitgeschrieben: eine Prozentzahl ohne ihren
+    # Bezugspunkt ist eine Behauptung.
+    vortag_kurs = bars[-2][1] if len(bars) >= 2 else None
+    vortag_stand = tag(bars[-2][0]) if len(bars) >= 2 else None
+
     def schnitt(n):
         """SMA ueber n Bars, oder None wenn es nicht genug sind.
 
@@ -147,6 +159,13 @@ def main():
         "geholt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "bars": len(bars),
         "laufende_bar_verworfen": unfertig,
+        # Gewinn/Verlust der letzten fertigen Bar gegen die davor. Waehrend
+        # der Sitzung zeigt die Seite stattdessen `live.seit_schluss_pct` —
+        # dieselbe Frage, nur mit dem laufenden Kurs.
+        "vortag_kurs": round(vortag_kurs, 2) if vortag_kurs else None,
+        "vortag_stand": vortag_stand,
+        "tag_pct": (round((kurs / vortag_kurs - 1) * 100, 2)
+                    if vortag_kurs else None),
         "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
         # ⚠ In einem EIGENEN Feld, nicht neben `sma` auf gleicher Hoehe. Die
         # Struktur soll schon sagen, welcher Schnitt die Regel traegt.
@@ -166,7 +185,20 @@ def main():
     out["live"] = None
     out["live_verlauf"] = []
     if unfertig and live_px:
-        prov = (sum(c for _, c in bars[-(SMA_N - 1):]) + float(live_px)) / SMA_N
+        def prov_schnitt(n):
+            """Der n-Tage-Schnitt, der MORGEN dastuende, wenn heute hier schliesst.
+
+            ⚠ EINE DEFINITION FUER ALLE DREI SCHNITTE. Die Karte zeigt
+            waehrend der Sitzung durchgehend den laufenden Kurs; stuende der
+            SMA200 auf dem laufenden und SMA50/100 noch auf dem gestrigen
+            Kurs, haette dieselbe Karte zwei Bezugspunkte.
+            """
+            if n < 1 or len(bars) < n - 1:
+                return None
+            vor = sum(c for _, c in bars[-(n - 1):]) if n > 1 else 0.0
+            return (vor + float(live_px)) / n
+
+        prov = prov_schnitt(SMA_N)
         zeit = (datetime.fromtimestamp(int(letzte_ts), timezone.utc)
                 .strftime("%Y-%m-%dT%H:%M:%SZ") if letzte_ts else None)
         out["live"] = {
@@ -180,6 +212,13 @@ def main():
             "vortag_kurs": round(kurs, 2),
             "vortag_stand": stand,
             "seit_schluss_pct": round((float(live_px) / kurs - 1) * 100, 2),
+            "neben": [{
+                "n": n,
+                "sma": round(w, 2) if w is not None else None,
+                "ueber": (float(live_px) > w) if w else None,
+                "abstand_pct": (round((float(live_px) / w - 1) * 100, 2)
+                                if w else None),
+            } for n, w in ((n, prov_schnitt(n)) for n in SMA_NEBEN)],
         }
         # ── VERLAUF INNERHALB DES HANDELSTAGES ────────────────────────────
         # Drei Laeufe am Tag ergeben drei Punkte. Wenig, aber zusammen mit dem
@@ -227,6 +266,32 @@ def main():
             punkt[f"s{n}"] = (round(sum(c for _, c in bars[k - n + 1:k + 1]) / n, 2)
                               if k + 1 >= n else None)
         verlauf.append(punkt)
+
+    # ⚠ DER LAUFENDE TAG GEHOERT AN DIE KURVE, SONST ENDET SIE GESTERN.
+    # Die Karte zeigt waehrend der Sitzung den laufenden Kurs; ein Diagramm,
+    # das daneben bei der letzten fertigen Bar aufhoert, laesst genau die
+    # Bewegung weg, wegen der man hinsieht.
+    #
+    # ⚠ ER WIRD MARKIERT (`vorlaeufig`), nicht stillschweigend angehaengt:
+    # ein vorlaeufiger Punkt, der aussieht wie ein Schlusskurs, ist dieselbe
+    # Klasse wie „PAUSCHAL 2.5 %" und `tech_score: 0/2`. Die Anzeige zeichnet
+    # ihn als offenen Kreis und sagt es unter dem Diagramm.
+    #
+    # ⚠ Die Schnitte kommen aus DERSELBEN Quelle wie die Karte
+    # (`prov_schnitt`) — zwei Rechenwege fuer denselben Punkt waeren zwei
+    # Zahlen unter einer Beschriftung.
+    if out["live"] and verlauf:
+        lv = out["live"]
+        nb = {x["n"]: x.get("sma") for x in (lv.get("neben") or [])}
+        punkt = {"d": (lv.get("zeit") or "")[:10] or stand,
+                 "c": lv["kurs"],
+                 "s": lv["sma_wenn_schluss"],
+                 "vorlaeufig": True}
+        for n in SMA_NEBEN:
+            punkt[f"s{n}"] = nb.get(n)
+        # Ein zweiter Punkt mit demselben Datum waere ein Knick aus dem Nichts.
+        if verlauf[-1]["d"] != punkt["d"]:
+            verlauf.append(punkt)
     out["verlauf"] = verlauf
     # ⚠ `allow_nan=False`: ein NaN ist kein gueltiges JSON, und der Browser
     # verweigert dann die GANZE Datei. Das hat am 04.11.2026 18 MB unlesbar
