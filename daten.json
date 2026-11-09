@@ -6,7 +6,7 @@
  "ueber": false,
  "abstand_pct": -3.64,
  "stand": "2026-11-06",
- "geholt": "2026-11-09T16:52:14Z",
+ "geholt": "2026-11-09T16:57:18Z",
  "bars": 499,
  "laufende_bar_verworfen": true,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
@@ -25,20 +25,25 @@
   }
  ],
  "live": {
-  "kurs": 676.8,
-  "sma_wenn_schluss": 681.16,
-  "abstand_pct": -0.64,
+  "kurs": 676.5,
+  "sma_wenn_schluss": 681.15,
+  "abstand_pct": -0.68,
   "ueber": false,
-  "zeit": "2026-11-09T16:52:09Z",
+  "zeit": "2026-11-09T16:57:18Z",
   "vortag_kurs": 656.1,
   "vortag_stand": "2026-11-06",
-  "seit_schluss_pct": 3.16
+  "seit_schluss_pct": 3.11
  },
  "live_verlauf": [
   {
    "ts": "2026-11-09T16:52:09Z",
    "kurs": 676.8,
    "abstand_pct": -0.64
+  },
+  {
+   "ts": "2026-11-09T16:57:18Z",
+   "kurs": 676.5,
+   "abstand_pct": -0.68
   }
  ],
  "verlauf": [
