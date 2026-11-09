@@ -1,86 +1,35 @@
 {
  "symbol": "QQQ",
  "sma_n": 200,
- "kurs": 656.1,
- "sma": 680.89,
+ "kurs": 679.35,
+ "sma": 681.17,
  "ueber": false,
- "abstand_pct": -3.64,
- "stand": "2026-11-06",
- "geholt": "2026-11-09T19:48:22Z",
- "bars": 499,
- "laufende_bar_verworfen": true,
- "vortag_kurs": 647.05,
- "vortag_stand": "2026-11-05",
- "tag_pct": 1.4,
+ "abstand_pct": -0.27,
+ "stand": "2026-11-09",
+ "geholt": "2026-11-09T23:17:46Z",
+ "bars": 500,
+ "laufende_bar_verworfen": false,
+ "vortag_kurs": 656.1,
+ "vortag_stand": "2026-11-06",
+ "tag_pct": 3.54,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
  "neben_smas": [
   {
    "n": 50,
-   "sma": 720.97,
+   "sma": 720.23,
    "ueber": false,
-   "abstand_pct": -9.0
+   "abstand_pct": -5.68
   },
   {
    "n": 100,
-   "sma": 716.58,
+   "sma": 716.15,
    "ueber": false,
-   "abstand_pct": -8.44
+   "abstand_pct": -5.14
   }
  ],
- "live": {
-  "kurs": 679.1,
-  "sma_wenn_schluss": 681.17,
-  "abstand_pct": -0.3,
-  "ueber": false,
-  "zeit": "2026-11-09T19:48:21Z",
-  "vortag_kurs": 656.1,
-  "vortag_stand": "2026-11-06",
-  "seit_schluss_pct": 3.51,
-  "neben": [
-   {
-    "n": 50,
-    "sma": 720.22,
-    "ueber": false,
-    "abstand_pct": -5.71
-   },
-   {
-    "n": 100,
-    "sma": 716.14,
-    "ueber": false,
-    "abstand_pct": -5.17
-   }
-  ]
- },
- "live_verlauf": [
-  {
-   "ts": "2026-11-09T16:52:09Z",
-   "kurs": 676.8,
-   "abstand_pct": -0.64
-  },
-  {
-   "ts": "2026-11-09T16:57:18Z",
-   "kurs": 676.5,
-   "abstand_pct": -0.68
-  },
-  {
-   "ts": "2026-11-09T19:44:50Z",
-   "kurs": 679.6,
-   "abstand_pct": -0.23
-  },
-  {
-   "ts": "2026-11-09T19:48:21Z",
-   "kurs": 679.1,
-   "abstand_pct": -0.3
-  }
- ],
+ "live": null,
+ "live_verlauf": [],
  "verlauf": [
-  {
-   "d": "2026-02-23",
-   "c": 601.41,
-   "s": 584.29,
-   "s50": 616.55,
-   "s100": 614.41
-  },
   {
    "d": "2026-02-24",
    "c": 607.87,
@@ -1336,11 +1285,10 @@
   },
   {
    "d": "2026-11-09",
-   "c": 679.1,
+   "c": 679.35,
    "s": 681.17,
-   "vorlaeufig": true,
-   "s50": 720.22,
-   "s100": 716.14
+   "s50": 720.23,
+   "s100": 716.15
   }
  ]
 }
