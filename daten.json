@@ -1,86 +1,35 @@
 {
  "symbol": "QQQ",
  "sma_n": 200,
- "kurs": 674.76,
- "sma": 681.42,
- "ueber": false,
- "abstand_pct": -0.98,
- "stand": "2026-11-10",
- "geholt": "2026-11-11T19:51:05Z",
+ "kurs": 690.38,
+ "sma": 681.71,
+ "ueber": true,
+ "abstand_pct": 1.27,
+ "stand": "2026-11-11",
+ "geholt": "2026-11-11T23:28:13Z",
  "bars": 501,
- "laufende_bar_verworfen": true,
- "vortag_kurs": 679.35,
- "vortag_stand": "2026-11-09",
- "tag_pct": -0.68,
+ "laufende_bar_verworfen": false,
+ "vortag_kurs": 674.76,
+ "vortag_stand": "2026-11-10",
+ "tag_pct": 2.31,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
  "neben_smas": [
   {
    "n": 50,
-   "sma": 719.39,
+   "sma": 719.04,
    "ueber": false,
-   "abstand_pct": -6.2
+   "abstand_pct": -3.99
   },
   {
    "n": 100,
-   "sma": 715.49,
+   "sma": 715.01,
    "ueber": false,
-   "abstand_pct": -5.69
+   "abstand_pct": -3.45
   }
  ],
- "live": {
-  "kurs": 692.51,
-  "sma_wenn_schluss": 681.72,
-  "abstand_pct": 1.58,
-  "ueber": true,
-  "zeit": "2026-11-11T19:51:02Z",
-  "vortag_kurs": 674.76,
-  "vortag_stand": "2026-11-10",
-  "seit_schluss_pct": 2.63,
-  "neben": [
-   {
-    "n": 50,
-    "sma": 719.09,
-    "ueber": false,
-    "abstand_pct": -3.7
-   },
-   {
-    "n": 100,
-    "sma": 715.03,
-    "ueber": false,
-    "abstand_pct": -3.15
-   }
-  ]
- },
- "live_verlauf": [
-  {
-   "ts": "2026-11-11T16:42:48Z",
-   "kurs": 692.45,
-   "abstand_pct": 1.57
-  },
-  {
-   "ts": "2026-11-11T16:50:45Z",
-   "kurs": 693.01,
-   "abstand_pct": 1.65
-  },
-  {
-   "ts": "2026-11-11T19:48:08Z",
-   "kurs": 692.51,
-   "abstand_pct": 1.58
-  },
-  {
-   "ts": "2026-11-11T19:51:02Z",
-   "kurs": 692.51,
-   "abstand_pct": 1.58
-  }
- ],
+ "live": null,
+ "live_verlauf": [],
  "verlauf": [
-  {
-   "d": "2026-02-25",
-   "c": 616.68,
-   "s": 585.56,
-   "s50": 615.97,
-   "s100": 614.62
-  },
   {
    "d": "2026-02-26",
    "c": 609.24,
@@ -1336,11 +1285,10 @@
   },
   {
    "d": "2026-11-11",
-   "c": 692.51,
-   "s": 681.72,
-   "vorlaeufig": true,
-   "s50": 719.09,
-   "s100": 715.03
+   "c": 690.38,
+   "s": 681.71,
+   "s50": 719.04,
+   "s100": 715.01
   }
  ]
 }
