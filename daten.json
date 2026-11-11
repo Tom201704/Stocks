@@ -6,7 +6,7 @@
  "ueber": false,
  "abstand_pct": -0.98,
  "stand": "2026-11-10",
- "geholt": "2026-11-11T19:48:12Z",
+ "geholt": "2026-11-11T19:51:05Z",
  "bars": 501,
  "laufende_bar_verworfen": true,
  "vortag_kurs": 679.35,
@@ -32,7 +32,7 @@
   "sma_wenn_schluss": 681.72,
   "abstand_pct": 1.58,
   "ueber": true,
-  "zeit": "2026-11-11T19:48:08Z",
+  "zeit": "2026-11-11T19:51:02Z",
   "vortag_kurs": 674.76,
   "vortag_stand": "2026-11-10",
   "seit_schluss_pct": 2.63,
@@ -64,6 +64,11 @@
   },
   {
    "ts": "2026-11-11T19:48:08Z",
+   "kurs": 692.51,
+   "abstand_pct": 1.58
+  },
+  {
+   "ts": "2026-11-11T19:51:02Z",
    "kurs": 692.51,
    "abstand_pct": 1.58
   }
