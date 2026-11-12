@@ -1,86 +1,35 @@
 {
  "symbol": "QQQ",
  "sma_n": 200,
- "kurs": 690.38,
- "sma": 681.71,
+ "kurs": 688.17,
+ "sma": 681.99,
  "ueber": true,
- "abstand_pct": 1.27,
- "stand": "2026-11-11",
- "geholt": "2026-11-12T19:47:09Z",
+ "abstand_pct": 0.91,
+ "stand": "2026-11-12",
+ "geholt": "2026-11-12T23:18:04Z",
  "bars": 501,
- "laufende_bar_verworfen": true,
- "vortag_kurs": 674.76,
- "vortag_stand": "2026-11-10",
- "tag_pct": 2.31,
+ "laufende_bar_verworfen": false,
+ "vortag_kurs": 690.38,
+ "vortag_stand": "2026-11-11",
+ "tag_pct": -0.32,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
  "neben_smas": [
   {
    "n": 50,
-   "sma": 719.04,
+   "sma": 718.62,
    "ueber": false,
-   "abstand_pct": -3.99
+   "abstand_pct": -4.24
   },
   {
    "n": 100,
-   "sma": 715.01,
+   "sma": 714.76,
    "ueber": false,
-   "abstand_pct": -3.45
+   "abstand_pct": -3.72
   }
  ],
- "live": {
-  "kurs": 688.01,
-  "sma_wenn_schluss": 681.99,
-  "abstand_pct": 0.88,
-  "ueber": true,
-  "zeit": "2026-11-12T19:47:06Z",
-  "vortag_kurs": 690.38,
-  "vortag_stand": "2026-11-11",
-  "seit_schluss_pct": -0.34,
-  "neben": [
-   {
-    "n": 50,
-    "sma": 718.62,
-    "ueber": false,
-    "abstand_pct": -4.26
-   },
-   {
-    "n": 100,
-    "sma": 714.76,
-    "ueber": false,
-    "abstand_pct": -3.74
-   }
-  ]
- },
- "live_verlauf": [
-  {
-   "ts": "2026-11-12T16:47:08Z",
-   "kurs": 690.94,
-   "abstand_pct": 1.31
-  },
-  {
-   "ts": "2026-11-12T16:53:58Z",
-   "kurs": 691.62,
-   "abstand_pct": 1.41
-  },
-  {
-   "ts": "2026-11-12T19:42:38Z",
-   "kurs": 687.64,
-   "abstand_pct": 0.83
-  },
-  {
-   "ts": "2026-11-12T19:47:06Z",
-   "kurs": 688.01,
-   "abstand_pct": 0.88
-  }
- ],
+ "live": null,
+ "live_verlauf": [],
  "verlauf": [
-  {
-   "d": "2026-02-26",
-   "c": 609.24,
-   "s": 586.16,
-   "s50": 615.89,
-   "s100": 614.65
-  },
   {
    "d": "2026-02-27",
    "c": 607.29,
@@ -1336,9 +1285,8 @@
   },
   {
    "d": "2026-11-12",
-   "c": 688.01,
+   "c": 688.17,
    "s": 681.99,
-   "vorlaeufig": true,
    "s50": 718.62,
    "s100": 714.76
   }
