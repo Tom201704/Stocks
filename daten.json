@@ -1,86 +1,35 @@
 {
  "symbol": "QQQ",
  "sma_n": 200,
- "kurs": 679.89,
- "sma": 682.24,
+ "kurs": 661.75,
+ "sma": 682.44,
  "ueber": false,
- "abstand_pct": -0.34,
- "stand": "2026-11-13",
- "geholt": "2026-11-16T19:49:18Z",
- "bars": 499,
- "laufende_bar_verworfen": true,
- "vortag_kurs": 688.17,
- "vortag_stand": "2026-11-12",
- "tag_pct": -1.2,
+ "abstand_pct": -3.03,
+ "stand": "2026-11-16",
+ "geholt": "2026-11-16T23:20:48Z",
+ "bars": 500,
+ "laufende_bar_verworfen": false,
+ "vortag_kurs": 679.89,
+ "vortag_stand": "2026-11-13",
+ "tag_pct": -2.67,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
  "neben_smas": [
   {
    "n": 50,
-   "sma": 717.87,
+   "sma": 716.72,
    "ueber": false,
-   "abstand_pct": -5.29
+   "abstand_pct": -7.67
   },
   {
    "n": 100,
-   "sma": 714.45,
+   "sma": 713.9,
    "ueber": false,
-   "abstand_pct": -4.84
+   "abstand_pct": -7.31
   }
  ],
- "live": {
-  "kurs": 661.6,
-  "sma_wenn_schluss": 682.44,
-  "abstand_pct": -3.05,
-  "ueber": false,
-  "zeit": "2026-11-16T19:49:17Z",
-  "vortag_kurs": 679.89,
-  "vortag_stand": "2026-11-13",
-  "seit_schluss_pct": -2.69,
-  "neben": [
-   {
-    "n": 50,
-    "sma": 716.72,
-    "ueber": false,
-    "abstand_pct": -7.69
-   },
-   {
-    "n": 100,
-    "sma": 713.9,
-    "ueber": false,
-    "abstand_pct": -7.33
-   }
-  ]
- },
- "live_verlauf": [
-  {
-   "ts": "2026-11-16T16:59:52Z",
-   "kurs": 668.17,
-   "abstand_pct": -2.1
-  },
-  {
-   "ts": "2026-11-16T17:04:28Z",
-   "kurs": 666.99,
-   "abstand_pct": -2.27
-  },
-  {
-   "ts": "2026-11-16T19:46:46Z",
-   "kurs": 661.18,
-   "abstand_pct": -3.11
-  },
-  {
-   "ts": "2026-11-16T19:49:17Z",
-   "kurs": 661.6,
-   "abstand_pct": -3.05
-  }
- ],
+ "live": null,
+ "live_verlauf": [],
  "verlauf": [
-  {
-   "d": "2026-03-02",
-   "c": 608.09,
-   "s": 587.12,
-   "s50": 615.75,
-   "s100": 614.7
-  },
   {
    "d": "2026-03-03",
    "c": 601.58,
@@ -1336,9 +1285,8 @@
   },
   {
    "d": "2026-11-16",
-   "c": 661.6,
+   "c": 661.75,
    "s": 682.44,
-   "vorlaeufig": true,
    "s50": 716.72,
    "s100": 713.9
   }
