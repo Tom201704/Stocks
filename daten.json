@@ -6,7 +6,7 @@
  "ueber": false,
  "abstand_pct": -6.63,
  "stand": "2026-11-24",
- "geholt": "2026-11-25T16:58:49Z",
+ "geholt": "2026-11-25T19:44:45Z",
  "bars": 501,
  "laufende_bar_verworfen": true,
  "vortag_kurs": 651.03,
@@ -28,26 +28,26 @@
   }
  ],
  "live": {
-  "kurs": 613.66,
-  "sma_wenn_schluss": 683.4,
-  "abstand_pct": -10.2,
+  "kurs": 632.48,
+  "sma_wenn_schluss": 683.49,
+  "abstand_pct": -7.46,
   "ueber": false,
-  "zeit": "2026-11-25T16:58:48Z",
+  "zeit": "2026-11-25T19:44:44Z",
   "vortag_kurs": 638.1,
   "vortag_stand": "2026-11-24",
-  "seit_schluss_pct": -3.83,
+  "seit_schluss_pct": -0.88,
   "neben": [
    {
     "n": 50,
-    "sma": 706.64,
+    "sma": 707.02,
     "ueber": false,
-    "abstand_pct": -13.16
+    "abstand_pct": -10.54
    },
    {
     "n": 100,
-    "sma": 708.26,
+    "sma": 708.45,
     "ueber": false,
-    "abstand_pct": -13.36
+    "abstand_pct": -10.72
    }
   ]
  },
@@ -61,6 +61,11 @@
    "ts": "2026-11-25T16:58:48Z",
    "kurs": 613.66,
    "abstand_pct": -10.2
+  },
+  {
+   "ts": "2026-11-25T19:44:44Z",
+   "kurs": 632.48,
+   "abstand_pct": -7.46
   }
  ],
  "verlauf": [
@@ -1326,11 +1331,11 @@
   },
   {
    "d": "2026-11-25",
-   "c": 613.66,
-   "s": 683.4,
+   "c": 632.48,
+   "s": 683.49,
    "vorlaeufig": true,
-   "s50": 706.64,
-   "s100": 708.26
+   "s50": 707.02,
+   "s100": 708.45
   }
  ]
 }
