@@ -1,76 +1,35 @@
 {
  "symbol": "QQQ",
  "sma_n": 200,
- "kurs": 633.93,
- "sma": 683.5,
+ "kurs": 650.99,
+ "sma": 683.69,
  "ueber": false,
- "abstand_pct": -7.25,
- "stand": "2026-11-25",
- "geholt": "2026-11-27T16:58:43Z",
+ "abstand_pct": -4.78,
+ "stand": "2026-11-27",
+ "geholt": "2026-11-27T19:48:33Z",
  "bars": 500,
- "laufende_bar_verworfen": true,
- "vortag_kurs": 638.1,
- "vortag_stand": "2026-11-24",
- "tag_pct": -0.65,
+ "laufende_bar_verworfen": false,
+ "vortag_kurs": 633.93,
+ "vortag_stand": "2026-11-25",
+ "tag_pct": 2.69,
  "quelle": "Yahoo Finance, Tagesschlusskurse (unbereinigt)",
  "neben_smas": [
   {
    "n": 50,
-   "sma": 707.05,
+   "sma": 705.73,
    "ueber": false,
-   "abstand_pct": -10.34
+   "abstand_pct": -7.76
   },
   {
    "n": 100,
-   "sma": 708.46,
+   "sma": 707.86,
    "ueber": false,
-   "abstand_pct": -10.52
+   "abstand_pct": -8.03
   }
  ],
- "live": {
-  "kurs": 646.91,
-  "sma_wenn_schluss": 683.67,
-  "abstand_pct": -5.38,
-  "ueber": false,
-  "zeit": "2026-11-27T16:58:42Z",
-  "vortag_kurs": 633.93,
-  "vortag_stand": "2026-11-25",
-  "seit_schluss_pct": 2.05,
-  "neben": [
-   {
-    "n": 50,
-    "sma": 705.65,
-    "ueber": false,
-    "abstand_pct": -8.32
-   },
-   {
-    "n": 100,
-    "sma": 707.82,
-    "ueber": false,
-    "abstand_pct": -8.61
-   }
-  ]
- },
- "live_verlauf": [
-  {
-   "ts": "2026-11-27T16:53:42Z",
-   "kurs": 648.39,
-   "abstand_pct": -5.16
-  },
-  {
-   "ts": "2026-11-27T16:58:42Z",
-   "kurs": 646.91,
-   "abstand_pct": -5.38
-  }
- ],
+ "live": null,
+ "live_verlauf": [],
  "verlauf": [
-  {
-   "d": "2026-03-12",
-   "c": 597.26,
-   "s": 590.64,
-   "s50": 613.85,
-   "s100": 614.93
-  },
   {
    "d": "2026-03-13",
    "c": 593.72,
@@ -1326,11 +1285,10 @@
   },
   {
    "d": "2026-11-27",
-   "c": 646.91,
-   "s": 683.67,
-   "vorlaeufig": true,
-   "s50": 705.65,
-   "s100": 707.82
+   "c": 650.99,
+   "s": 683.69,
+   "s50": 705.73,
+   "s100": 707.86
   }
  ]
 }
